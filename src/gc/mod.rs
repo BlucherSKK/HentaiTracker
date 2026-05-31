@@ -6,7 +6,7 @@ use tokio::time::sleep;
 
 use crate::admin::metric::ServerState;
 use crate::db::Store;
-use crate::lfs::UPLOADS_DIR;
+use crate::lfs::STORE_DIR;
 
 // ----- intervals -----
 
@@ -47,7 +47,7 @@ pub fn start(store: Arc<Store>, srv_state: ServerState, threshold: u64) {
 async fn collect(store: &Store) -> Result<usize, Box<dyn std::error::Error + Send + Sync>> {
     let referenced = store.get_all_referenced_filenames().await?;
 
-    let mut dir     = tokio::fs::read_dir(UPLOADS_DIR).await?;
+    let mut dir     = tokio::fs::read_dir(STORE_DIR).await?;
     let mut deleted = 0usize;
 
     while let Some(entry) = dir.next_entry().await? {

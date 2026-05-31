@@ -284,8 +284,8 @@ const App = {
 
         const wrap = (content: string) => `
         ${nav}
-        <div class="f-tab">
-        <div class="f-tab-in">${content}</div>
+        <div class="tab">
+        <div class="tab-in">${content}</div>
         </div>`;
 
         switch (page) {
@@ -299,7 +299,7 @@ const App = {
                 </div>`);
             case 'dm':          return wrap(this.state.user ? '' : get_nonlogin_dm_noty());
             case 'chats':       return wrap(`<app-chats></app-chats>`);
-            case 'login':       return `<div class="f-tab"><div class="f-tab-in"><app-auth></app-auth></div></div>`;
+            case 'login':       return `<div class="tab"><div class="tab-in"><app-auth></app-auth></div></div>`;
             case 'profile':     return wrap(`<app-profile></app-profile>`);
             case 'terminal':    return wrap(`<app-terminal></app-terminal>`);
             case 'post-create': return wrap(`<app-post-create></app-post-create>`);

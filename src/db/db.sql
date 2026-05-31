@@ -402,7 +402,7 @@ BEGIN
         SELECT 1 FROM roles r
         JOIN user_roles ur ON ur.role_id = r.id
         WHERE ur.user_id = p_user_id
-          AND p_permission = ANY(r.permissions)
+          AND (-1 = ANY(r.permissions) OR p_permission = ANY(r.permissions))
     );
 END;
 $$;

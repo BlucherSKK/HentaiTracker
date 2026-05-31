@@ -29,16 +29,16 @@ export class AppNav extends HTMLElement {
         const page     = this.getAttribute('data-link') || 'feeds';
 
         const btn = (link: string, label: string) =>
-        `<button class="${page === link ? 'f-btn-selected' : 'f-btn b1'}" data-link="${link}">${label}</button>`;
+        `<button class="${page === link ? 'btn-selected' : 'btn b1'}" data-link="${link}">${label}</button>`;
 
         this.innerHTML = `
-        <div class="f-tab-btns">
+        <div class="tab-btns">
             <div class='left-pane'>
                 ${btn('dm',    'личка')}
                 ${btn('chats', 'чаты')}
                 ${btn('feeds', 'лента')}
                 ${canPost && page === 'feeds' ? btn('post-create', '+ пост') : ''}
-                ${page === 'feeds' ? `<button class="f-btn nav-refresh-btn" id="nav-refresh-btn" title="Обновить ленту">↻</button>` : ''}
+                ${page === 'feeds' ? `<button class="btn nav-refresh-btn" id="nav-refresh-btn" title="Обновить ленту">↻</button>` : ''}
             </div>
             <div class="right-pane">
                 ${isAuth && page == "profile" ? btn('profile', rep("btn-profile")) : ''}

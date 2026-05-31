@@ -2,8 +2,8 @@
 
 :root {
     --bgc:         #bfbfbf;
-    --textc:       #111111;
-    --ltextc:      #7d7d7d;
+    --text:       #111111;
+    --alt-text:      #7d7d7d;
     --accentc:     #007bff;
     --border:      gray;
     --bg-nav:      lightslategray;
@@ -13,21 +13,11 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --f-bg:        #242324;
-        --f-a-bg:      #403f40;
-        --f-fbg:       #aaaaaa;
-        --bgc:         #111111;
-        --alt-text:    #0E1012;
-        --textc:       #eeeeee;
-        --ltextc:      #bfbfbf;
-        --accentc:     #375a7f;
-        --border:      gray;
-        --bg-nav:      gray;
-        --bg-nav-hover: pink;
+        --text:          #eeeeee;
+        --alt-text:      #bfbfbf;
         --bg-light:      #414141;
         --bg-average:    #313131;
         --bg-darck:      #242424;
-        --btn-1:         #8e8e8e;
     }
 }
 
@@ -85,6 +75,10 @@ app-post-create, app-settings, app-post-page, app-auth {
     min-height: 0;
 }
 
+app-post-create {
+    overflow-y: scroll;
+}
+
 /* ----- header ----- */
 
 .header {
@@ -136,7 +130,7 @@ app-post-create, app-settings, app-post-page, app-auth {
 
 /* ----- nav tab buttons ----- */
 
-.f-tab-btns {
+.tab-btns {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -147,14 +141,14 @@ app-post-create, app-settings, app-post-page, app-auth {
 
 }
 
-.f-tab-btns .left-pane {
+.tab-btns .left-pane {
     display: flex;
     align-items: flex-end;
     gap: 2px;
     margin-left: 1vw;
 }
 
-.f-tab-btns .right-pane {
+.tab-btns .right-pane {
     display: flex;
     align-items: flex-end;
     gap: 2px;
@@ -163,7 +157,7 @@ app-post-create, app-settings, app-post-page, app-auth {
 
 .b1 {
     box-shadow:
-        inset 0px 2px 0 lightgray,
+        inset 0px 3px 3px -2px lightgray,
         inset 0 0 2px 0 black;
 }
 
@@ -184,7 +178,7 @@ app-post-create, app-settings, app-post-page, app-auth {
     filter: drop-shadow(0 0 2px #f9b44b);
 }
 
-.f-btn {
+.btn {
     padding: 5px 16px;
     font-family: "Segoe UI", Tahoma, sans-serif;
     font-size: 13px;
@@ -193,12 +187,12 @@ app-post-create, app-settings, app-post-page, app-auth {
     border-bottom: none;
     border-radius: 4px 4px 0 0;
     cursor: pointer;
-    background: var(--f-fbg);
+    background: var(--bg-light);
     color: var(--alt-text);
     transition: filter 0.1s;
 }
 
-.f-btn-selected {
+.btn-selected {
     padding: 6px 16px;
     font-family: "Segoe UI", Tahoma, sans-serif;
     font-size: 13px;
@@ -207,7 +201,7 @@ app-post-create, app-settings, app-post-page, app-auth {
     border-bottom: none;
     border-radius: 4px 4px 0 0;
     cursor: pointer;
-    background: var(--f-a-bg);
+    background: var(--bg-average);
     color: #e8c97a;
     z-index: 1;
     margin-bottom: -2px;
@@ -224,10 +218,10 @@ app-post-create, app-settings, app-post-page, app-auth {
     transform: rotate(360deg);
 }
 
-/* ----- f-tab (серая подложка) ----- */
+/* ----- tab (серая подложка) ----- */
 
-.f-tab {
-    background: var(--f-a-bg);
+.tab {
+    background: var(--bg-average);
     border: 2px solid #555;
     border-top: none;
     width: 100%;
@@ -238,14 +232,14 @@ app-post-create, app-settings, app-post-page, app-auth {
     height: 87vh;
     box-shadow:
         inset 0px 1px 0 gray,
-        inset 0px 40px 30px -12px var(--f-a-bg),
+        inset 0px 40px 30px -12px var(--bg-average),
         inset 0 0 14px 0 black;
 }
 
-/* ----- f-tab-in (тело контента) ----- */
+/* ----- tab-in (тело контента) ----- */
 
-.f-tab-in {
-    background-color: var(--f-bg);
+.tab-in {
+    background-color: var(--bg-darck);
     border: 1px solid #1a1a1a;
     box-sizing: border-box;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -386,7 +380,7 @@ app-post-create, app-settings, app-post-page, app-auth {
 }
 
 .page.filled {
-    background: var(--f-a-bg);
+    background: var(--bg-average);
 }
 
 .page.profile {
@@ -395,7 +389,7 @@ app-post-create, app-settings, app-post-page, app-auth {
 }
 
 .profile-loading {
-    color: var(--ltextc);
+    color: var(--alt-text);
     padding: 2em;
 }
 
@@ -437,13 +431,13 @@ app-post-create, app-settings, app-post-page, app-auth {
     padding: 0.2em 0.5em;
     font-size: 0.8em;
     cursor: pointer;
-    color: var(--ltextc);
+    color: var(--alt-text);
     line-height: 1;
     transition: color 0.2s, border-color 0.2s;
 }
 
 .profile-edit-btn:hover {
-    color: var(--textc);
+    color: var(--text);
     border-color: var(--accentc);
 }
 
@@ -484,7 +478,7 @@ app-post-create, app-settings, app-post-page, app-auth {
     align-items: center;
     justify-content: center;
     font-size: 2em;
-    color: var(--ltextc);
+    color: var(--alt-text);
 }
 
 .profile-avatar-btn {
@@ -493,14 +487,14 @@ app-post-create, app-settings, app-post-page, app-auth {
     border: 1px solid var(--border);
     border-radius: 0.4em;
     cursor: pointer;
-    color: var(--ltextc);
+    color: var(--alt-text);
     transition: color 0.2s, border-color 0.2s;
     background: transparent;
     white-space: nowrap;
 }
 
 .profile-avatar-btn:hover {
-    color: var(--textc);
+    color: var(--text);
     border-color: var(--accentc);
 }
 
@@ -511,8 +505,8 @@ app-post-create, app-settings, app-post-page, app-auth {
     min-width: 0;
 }
 
-.profile-id   { font-size: 0.8em; color: var(--ltextc); }
-.profile-name { font-size: 1.4em; font-weight: bold; color: var(--textc); word-break: break-all; }
+.profile-id   { font-size: 0.8em; color: var(--alt-text); }
+.profile-name { font-size: 1.4em; font-weight: bold; color: var(--text); word-break: break-all; }
 
 .profile-roles {
     font-size: 0.8em;
@@ -528,7 +522,7 @@ app-post-create, app-settings, app-post-page, app-auth {
     padding: 0.3em 0.8em;
     border: 1px solid var(--border);
     border-radius: 2em;
-    color: var(--ltextc);
+    color: var(--alt-text);
     background: var(--bgc);
 }
 
@@ -541,7 +535,7 @@ app-post-create, app-settings, app-post-page, app-auth {
 .profile-section-title {
     font-size: 0.85em;
     font-weight: bold;
-    color: var(--ltextc);
+    color: var(--alt-text);
     margin: 0;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -562,7 +556,7 @@ app-post-create, app-settings, app-post-page, app-auth {
     border-radius: 2em;
     cursor: pointer;
     font-size: 0.9em;
-    color: var(--textc);
+    color: var(--text);
     transition: background 0.2s, border-color 0.2s;
     user-select: none;
 }
@@ -600,7 +594,7 @@ app-post-create, app-settings, app-post-page, app-auth {
 
 .profile-status {
     font-size: 0.9em;
-    color: var(--ltextc);
+    color: var(--alt-text);
 }
 
 .profile-posts-section {
@@ -616,7 +610,7 @@ app-post-create, app-settings, app-post-page, app-auth {
 .profile-posts-header {
     font-size: 0.85em;
     font-weight: bold;
-    color: var(--ltextc);
+    color: var(--alt-text);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     padding: 0 0.2em;
@@ -631,7 +625,7 @@ app-post-create, app-settings, app-post-page, app-auth {
 .profile-posts-loading,
 .profile-posts-empty {
     font-size: 0.9em;
-    color: var(--ltextc);
+    color: var(--alt-text);
     padding: 1em 0;
 }
 
@@ -856,13 +850,13 @@ app-post-create, app-settings, app-post-page, app-auth {
     cursor: pointer;
     border: none;
     background: transparent;
-    color: var(--ltextc);
+    color: var(--alt-text);
     transition: background 0.2s, color 0.2s;
 }
 
 .auth-tab:hover {
     background: var(--bg-nav-hover);
-    color: var(--textc);
+    color: var(--text);
 }
 
 .auth-tab--active {
@@ -886,7 +880,7 @@ app-post-create, app-settings, app-post-page, app-auth {
 
 .auth-label {
     font-size: 0.85em;
-    color: var(--ltextc);
+    color: var(--alt-text);
 }
 
 .input {

@@ -150,7 +150,7 @@ async fn main() {
     dotenvy::dotenv().ok();
     env_logger::init();
 
-    tokio::fs::create_dir_all(lfs::UPLOADS_DIR)
+    tokio::fs::create_dir_all(lfs::STORE_DIR)
     .await
     .expect("cannot create uploads dir");
 

@@ -98,7 +98,6 @@ export class PostCreatePage extends HTMLElement {
         <div class="pc-wrap">
         <div class="pc-header">
         <span class="pc-title">Новый пост</span>
-        <button class="pc-cancel-btn" id="pc-cancel">Отмена</button>
         </div>
 
         <input class="pc-input-title" id="pc-post-title" type="text"
@@ -138,7 +137,8 @@ export class PostCreatePage extends HTMLElement {
         </div>
         <div class="pc-footer-row">
         <span class="pc-status" id="pc-status"></span>
-        <button class="pc-submit-btn" id="pc-submit">Опубликовать</button>
+        <button class="btn-1" id="pc-cancel">Отмена</button>
+        <button class="btn-1" id="pc-submit">Опубликовать</button>
         </div>
         </div>
         </div>`;

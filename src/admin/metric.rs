@@ -14,7 +14,7 @@ pub struct ServerState {
 }
 
 lazy_static! {
-    static ref AvaibleSize: u64 = crate::lfs::get_available_space();
+    static ref AvaibleSize: u64 = crate::lfs::get_available_space(crate::lfs::STORE_DIR).expect("avaible space cant get");
 }
 
 pub enum FileStoreState {

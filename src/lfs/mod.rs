@@ -14,7 +14,7 @@ use tokio::sync::RwLock;
 use crate::secure;
 
 const TOKEN_TTL_SECS: u64  = 300;
-pub const STORE_DIR: &str = "./uploads";
+pub const STORE_DIR: &str = "/home/blucher/development/HentaiTraker/uploads";
 
 const LIMIT_IMAGE: u64 = 20  * 1024 * 1024;
 const LIMIT_LARGE: u64 = 200 * 1024 * 1024;

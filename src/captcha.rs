@@ -24,9 +24,9 @@ use crate::secure;
 
 const CAPTCHA_DIR:        &str = "/home/blucher/development/HentaiTraker/captcha_images";
 const CONFIG_PATH:        &str = "/home/blucher/development/HentaiTraker/captcha_images/captcha.toml";
-const CHALLENGE_TTL_SECS: u64  = 300;
-const TOKEN_TTL_SECS:     u64  = 120;
-const GATE_TTL_SECS:      u64  = 3600;
+const CHALLENGE_TTL_SECS: u64  = 30;
+const TOKEN_TTL_SECS:     u64  = 12;
+const GATE_TTL_SECS:      u64  = 30;
 
 // ----- config types -----
 
@@ -225,7 +225,7 @@ impl<'r> rocket::request::FromRequest<'r> for Fingerprint {
         let ip = req.client_ip().map(|ip| ip.to_string()).unwrap_or_default();
         let ua = req.headers().get_one("User-Agent").unwrap_or("");
         let mut h = Sha256::new();
-        h.update(format!("{ip}|{ua})"));
+        h.update(format!("{ip}|{ua}dqw)"));
         Outcome::Success(Fingerprint(hex::encode(h.finalize())))
     }
 }
