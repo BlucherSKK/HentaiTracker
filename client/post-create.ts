@@ -95,7 +95,7 @@ export class PostCreatePage extends HTMLElement {
 
     private render() {
         this.innerHTML = `
-        <div class="pc-wrap">
+        <div class="pc-wrap c-foreign" id="pc-wrap">
         <div class="pc-header">
         <span class="pc-title">Новый пост</span>
         </div>
@@ -113,12 +113,10 @@ export class PostCreatePage extends HTMLElement {
         <div class="pc-tags-selected" id="pc-tags-selected"></div>
         <div class="pc-tag-error" id="pc-tag-error"></div>
         </div>
-
         <div class="pc-editor-area">
-        <div class="pc-drop-zone" id="pc-drop-zone">
-        <span class="pc-drop-hint">Перетащите картинку — плейсхолдер вставится в текст и заменится серверным именем при публикации</span>
-        </div>
         <div class="pc-panes">
+
+
         <textarea class="pc-textarea" id="pc-textarea"
         placeholder="## Заголовок&#10;- список&#10;- [ ] чеклист&#10;![alt](__img_0__)"></textarea>
         <div class="pc-preview" id="pc-preview"></div>
@@ -137,7 +135,7 @@ export class PostCreatePage extends HTMLElement {
         </div>
         <div class="pc-footer-row">
         <span class="pc-status" id="pc-status"></span>
-        <button class="btn-1" id="pc-cancel">Отмена</button>
+        <button class="btn-red" id="pc-cancel">Отмена</button>
         <button class="btn-1" id="pc-submit">Опубликовать</button>
         </div>
         </div>
@@ -157,16 +155,19 @@ export class PostCreatePage extends HTMLElement {
         const titleInput = this.querySelector<HTMLInputElement>('#pc-post-title');
         titleInput?.addEventListener('input', () => this._updateFeedPreview());
 
-        const dz = this.querySelector<HTMLElement>('#pc-drop-zone');
-        if (dz) {
-            dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('pc-drop-over'); });
-            dz.addEventListener('dragleave', () => dz.classList.remove('pc-drop-over'));
-            dz.addEventListener('drop', e => {
-                e.preventDefault();
-                dz.classList.remove('pc-drop-over');
-                const file = e.dataTransfer?.files[0];
-                if (file) this._addImage(file);
-            });
+        const wrap = this.querySelector<HTMLElement>('#pc-wrap');
+        if (wrap) {
+            let _dragDepth = 0;
+            wrap.addEventListener('dragenter', e => { e.preventDefault(); if (++_dragDepth === 1) wrap.classList.add('c-foreign-forcer-act'); });
+            wrap.addEventListener('dragleave', () => { if (--_dragDepth === 0) wrap.classList.remove('c-foreign-force-act'); });
+            wrap.addEventListener('dragover',  e => e.preventDefault());
+            wrap.addEventListener('drop', e => {
+                    e.preventDefault();
+                    _dragDepth = 0;
+                    wrap.classList.remove('c-foreign-force-act');
+                    const file = e.dataTransfer?.files[0];
+                    if (file) this._addImage(file);
+                });
         }
 
         this._bindTagInput();
@@ -496,7 +497,8 @@ export class PostCreatePage extends HTMLElement {
 }
 
 const POST_CREATE_STYLES = `
-.pc-wrap { display:flex; flex-direction:column; gap:12px; padding:20px; max-width:1100px; margin:0 auto; color:var(--textc); }
+.pc-wrap { display:flex; flex-direction:column; gap:12px; padding:20px; max-width:1100px; margin:0 auto; color:var(--textc); position:relative; }
+.pc-wrap.pc-drop-over::after { content:''; position:absolute; inset:0; border:2px dashed var(--accentc); border-radius:8px; pointer-events:none; z-index:100; }
 .pc-header { display:flex; align-items:center; justify-content:space-between; }
 .pc-title { font-size:1.3rem; font-weight:bold; }
 .pc-cancel-btn { padding:6px 16px; cursor:pointer; background:transparent; border:1px solid var(--border); border-radius:4px; color:var(--textc); }
@@ -520,8 +522,6 @@ const POST_CREATE_STYLES = `
 .pc-tag-error { font-size:0.8rem; color:#e05; min-height:16px; }
 
 .pc-editor-area { display:flex; flex-direction:column; gap:8px; }
-.pc-drop-zone { border:2px dashed var(--border); border-radius:6px; padding:14px; text-align:center; color:var(--ltextc); font-size:0.9rem; transition:background 0.2s; cursor:default; }
-.pc-drop-zone.pc-drop-over { background:var(--alt-bg); border-color:var(--accentc); }
 .pc-panes { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 @media(max-width:700px){.pc-panes{grid-template-columns:1fr;}}
 .pc-textarea { min-height:260px; resize:vertical; padding:10px; font-family:monospace; font-size:0.95rem; border:1px solid var(--border); border-radius:4px; background:var(--bgc); color:var(--textc); }

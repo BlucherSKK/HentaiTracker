@@ -13,8 +13,8 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --text:          #eeeeee;
-        --alt-text:      #bfbfbf;
+        --text:          lightgray;
+        --alt-text:      darkgray;
         --bg-light:      #414141;
         --bg-average:    #313131;
         --bg-darck:      #242424;
@@ -711,11 +711,11 @@ app-post-create {
 /* ----- auth page ----- */
 
 .btn-1 {
-    background-color: var(--btn-1);
+    background-color: var(--bg-average);
     padding: 10px 12px 10px 12px;
     font-size: 100%;
     text-align: center;
-    color: #000;
+    color: var(--text);
     font-weight: 600;
     display: inline-block;
     vertical-align: baseline;
@@ -735,7 +735,32 @@ app-post-create {
     height: 36px;
 }
 
-.btn-1:hover, .btn-1:focus {
+.btn-red {
+    background-color: brown;
+    padding: 10px 12px 10px 12px;
+    font-size: 100%;
+    text-align: center;
+    color: var(--text);
+    font-weight: 600;
+    display: inline-block;
+    vertical-align: baseline;
+    min-width: 128px;
+    border: none;
+    line-height: inherit;
+    white-space: nowrap;
+    box-shadow:
+    inset 8px 0px 4px -8px #000,
+    inset -8px 0px 4px -8px #000,
+    inset 0px 10px 2px -8px #e3e3e3,
+    inset 0px 10px 2px -8px #282828,
+    inset 0px -9px 2px -8px #000,0px 0px 4px 0px #000;
+    position: relative;
+    margin-right: 14px;
+    cursor: pointer;
+    height: 36px;
+}
+
+.btn-1:hover, .btn-1:focus, .btn-red:focus, .btn-red:hover {
     color: #000;
     text-decoration: none;
     outline: 0;
@@ -811,7 +836,7 @@ app-post-create {
     inset 0px -9px 2px -8px #000,0px 0px 4px 0px #000;
 }
 
-.c-foreign-act:active {
+.c-foreign-act:active .c-foreign-force-act{
     position: relative;
     padding-top: 12px;
     padding-bottom: 8px;
