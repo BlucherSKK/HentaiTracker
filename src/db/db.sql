@@ -39,6 +39,36 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION init_wiki_table()
+RETURNS void AS $$
+BEGIN
+    CREATE TABLE IF NOT EXISTS artikel (
+        id        SERIAL PRIMARY KEY,
+        path      TEXT NOT NULL DEFAULT '/',
+        title     TEXT,
+        content   TEXT NOT NULL,
+        files     TEXT,
+        author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        time      TIMESTAMP NOT NULL,
+        tags      TEXT,
+        actual    BOOLEAN NOT NULL DEFAULT false,
+        last_ver  INTEGER REFERENCES artikel(id) ON DELETE CASCADE,
+    );
+    CREATE INDEX IF NOT EXISTS idx_posts_author_time ON posts (author_id, time DESC);
+    CREATE INDEX IF NOT EXISTS idx_posts_time        ON posts (time DESC);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION init_cross_contributers_to_wiki()
+RETURNS void AS $$
+BEGIN
+    CREATE TABLE IF NOT EXISTS cross_chat_members_to_artikel (
+        contributer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        artikel_id     INTEGER REFERENCES artikel(id) ON DELETE CASCADE,
+        PRIMARY KEY (contributer_id, artikel_id)
+    );
+END;
+$$ LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION init_msg_table()

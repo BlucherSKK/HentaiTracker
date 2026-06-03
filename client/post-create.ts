@@ -158,16 +158,16 @@ export class PostCreatePage extends HTMLElement {
         const wrap = this.querySelector<HTMLElement>('#pc-wrap');
         if (wrap) {
             let _dragDepth = 0;
-            wrap.addEventListener('dragenter', e => { e.preventDefault(); if (++_dragDepth === 1) wrap.classList.add('c-foreign-forcer-act'); });
+            wrap.addEventListener('dragenter', e => { e.preventDefault(); if (++_dragDepth === 1) wrap.classList.add('c-foreign-force-act'); });
             wrap.addEventListener('dragleave', () => { if (--_dragDepth === 0) wrap.classList.remove('c-foreign-force-act'); });
             wrap.addEventListener('dragover',  e => e.preventDefault());
             wrap.addEventListener('drop', e => {
-                    e.preventDefault();
-                    _dragDepth = 0;
-                    wrap.classList.remove('c-foreign-force-act');
-                    const file = e.dataTransfer?.files[0];
-                    if (file) this._addImage(file);
-                });
+                e.preventDefault();
+                _dragDepth = 0;
+                wrap.classList.remove('c-foreign-force-act');
+                const file = e.dataTransfer?.files[0];
+                if (file) this._addImage(file);
+            });
         }
 
         this._bindTagInput();
