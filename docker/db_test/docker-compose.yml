@@ -5,19 +5,18 @@ services:
     container_name: test-postgres
     restart: always
     shm_size: 128mb
+    network_mode: host
     environment:
       POSTGRES_PASSWORD: mysecretpassword
       POSTGRES_USER: user
       POSTGRES_DB: test_db
-    ports:
-      - "5432:5432"
+
 
   redis:
     image: redis:latest  # Используем легкую версию на базе Alpine
     container_name: redis_app
     restart: always
-    ports:
-      - "6379:6379"          # Пробрасываем порт (хост:контейнер)
+    network_mode: host
     volumes:
       - redis_data:/data     # Сохраняем данные, чтобы они не удалились с контейнером
     command: redis-server --save 60 1 --loglevel warning # Настройка автосохранения

@@ -52,7 +52,7 @@ BEGIN
         time      TIMESTAMP NOT NULL,
         tags      TEXT,
         actual    BOOLEAN NOT NULL DEFAULT false,
-        last_ver  INTEGER REFERENCES artikel(id) ON DELETE CASCADE,
+        last_ver  INTEGER REFERENCES artikel(id) ON DELETE CASCADE
     );
     CREATE INDEX IF NOT EXISTS idx_posts_author_time ON posts (author_id, time DESC);
     CREATE INDEX IF NOT EXISTS idx_posts_time        ON posts (time DESC);
