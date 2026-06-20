@@ -836,7 +836,7 @@ app-post-create {
     inset 0px -9px 2px -8px #000,0px 0px 4px 0px #000;
 }
 
-.c-foreign-act:active .c-foreign-force-act{
+.c-foreign-act:active, .c-foreign-force-act{
     position: relative;
     padding-top: 12px;
     padding-bottom: 8px;
