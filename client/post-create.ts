@@ -1,64 +1,11 @@
 // post-create.ts
 
+import { MarkdownImage, renderMarkdownContainer } from "./markdown";
 import { POST_CARD_STYLES, PostCardData, renderPostCard } from "./post-card";
 import { HntWsConnection } from "./ws";
 
-// ----- markdown renderer -----
+// ----- utils -----
 
-function renderMarkdown(raw: string): string {
-    const lines = raw.split('\n');
-    const out: string[] = [];
-    let inList = false;
-    let inChecklist = false;
-
-    for (const line of lines) {
-        const h2 = line.match(/^##\s+(.+)/);
-        if (h2) {
-            if (inList)      { out.push('</ul>'); inList = false; }
-            if (inChecklist) { out.push('</ul>'); inChecklist = false; }
-            out.push(`<h2>${escMd(h2[1])}</h2>`);
-            continue;
-        }
-        const chk = line.match(/^- \[( |x)\] (.+)/i);
-        if (chk) {
-            if (inList) { out.push('</ul>'); inList = false; }
-            if (!inChecklist) { out.push('<ul class="pc-checklist">'); inChecklist = true; }
-            const checked = chk[1].toLowerCase() === 'x';
-            out.push(`<li><input type="checkbox" ${checked ? 'checked' : ''} disabled> ${inlineRender(chk[2])}</li>`);
-            continue;
-        }
-        const li = line.match(/^- (.+)/);
-        if (li) {
-            if (inChecklist) { out.push('</ul>'); inChecklist = false; }
-            if (!inList) { out.push('<ul class="pc-list">'); inList = true; }
-            out.push(`<li>${inlineRender(li[1])}</li>`);
-            continue;
-        }
-        if (inList)      { out.push('</ul>'); inList = false; }
-        if (inChecklist) { out.push('</ul>'); inChecklist = false; }
-        if (line.trim() === '') { out.push('<br>'); } else { out.push(`<p>${inlineRender(line)}</p>`); }
-    }
-    if (inList)      out.push('</ul>');
-    if (inChecklist) out.push('</ul>');
-    return out.join('');
-}
-
-function inlineRender(text: string): string {
-    return text
-    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => {
-        // ----- FIX: blob и абсолютные URL не оборачиваем в /api/files/ -----
-        const url = (src.startsWith('/') || src.startsWith('blob:') || src.startsWith('http'))
-        ? src
-        : `/api/files/${escAttr(src)}`;
-        return `<img src="${url}" alt="${escAttr(alt)}" class="pc-inline-img">`;
-    })
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) =>
-    `<a href="${escAttr(href)}" target="_blank" rel="noopener">${escMd(label)}</a>`
-    );
-}
-
-function escMd(s: string): string   { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function escAttr(s: string): string { return s.replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 function escapeRegex(s: string): string { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
 // ----- tag validation -----
@@ -70,9 +17,11 @@ function isValidTag(t: string): boolean { return TAG_RE.test(t); }
 
 // ----- types -----
 
-interface PendingImage { file: File; localUrl: string; placeholder: string; }
+interface PendingImage { file: File; localUrl: string; placeholder: string; base64: string | null; }
 
 let _imgCounter = 0;
+
+const MARKDOWN_PREVIEW_CLASS = 'pc-markdown-body';
 
 // ----- PostCreatePage -----
 
@@ -263,18 +212,18 @@ export class PostCreatePage extends HTMLElement {
 
     // ----- preview -----
 
-    private _resolveText(): string {
-        const ta = this.querySelector<HTMLTextAreaElement>('#pc-textarea');
-        let text = ta?.value ?? '';
+    private _markdownImages(): MarkdownImage[] {
+        const result: MarkdownImage[] = [];
         for (const img of this._images) {
-            text = text.replace(new RegExp(escapeRegex(img.placeholder), 'g'), img.localUrl);
+            if (img.base64) result.push({ name: img.placeholder, base64: img.base64 });
         }
-        return text;
+        return result;
     }
 
     private _updatePreview() {
         const preview = this.querySelector<HTMLElement>('#pc-preview');
-        if (preview) preview.innerHTML = renderMarkdown(this._resolveText());
+        const ta      = this.querySelector<HTMLTextAreaElement>('#pc-textarea');
+        if (preview) preview.innerHTML = renderMarkdownContainer(MARKDOWN_PREVIEW_CLASS, ta?.value ?? '', this._markdownImages());
         this._updateFeedPreview();
     }
 
@@ -316,7 +265,8 @@ export class PostCreatePage extends HTMLElement {
 
         const placeholder = `__img_${_imgCounter++}__`;
         const localUrl    = URL.createObjectURL(file);
-        this._images.push({ file, localUrl, placeholder });
+        const pending: PendingImage = { file, localUrl, placeholder, base64: null };
+        this._images.push(pending);
 
         const ta = this.querySelector<HTMLTextAreaElement>('#pc-textarea');
         if (ta) {
@@ -328,8 +278,22 @@ export class PostCreatePage extends HTMLElement {
             this._updatePreview();
         }
 
-        this._renderThumb({ file, localUrl, placeholder });
+        this._renderThumb(pending);
         this._setStatus(`Добавлено: ${file.name} → ${placeholder}`);
+
+        this._readImageBase64(file).then(base64 => {
+            pending.base64 = base64;
+            this._updatePreview();
+        });
+    }
+
+    private _readImageBase64(file: File): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload  = () => resolve(reader.result as string);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(file);
+        });
     }
 
     private _renderThumb(img: PendingImage) {
@@ -349,8 +313,6 @@ export class PostCreatePage extends HTMLElement {
         });
         thumbs.appendChild(wrap);
     }
-
-
 
     // ----- submit -----
 
@@ -390,7 +352,6 @@ export class PostCreatePage extends HTMLElement {
             const files = uploadedUrls.length > 0 ? JSON.stringify(uploadedUrls) : undefined;
 
             await new Promise<void>((resolve, reject) => {
-                // ----- once() возвращает () => void (unsub), а не this -----
                 const unsub = this.ws!.once('post_created', () => {
                     clearTimeout(timer);
                     resolve();
@@ -496,6 +457,8 @@ export class PostCreatePage extends HTMLElement {
     }
 }
 
+// ----- POST_CREATE_STYLES -----
+
 const POST_CREATE_STYLES = `
 .pc-wrap { display:flex; flex-direction:column; gap:12px; padding:20px; max-width:1100px; margin:0 auto; color:var(--textc); position:relative; }
 .pc-wrap.pc-drop-over::after { content:''; position:absolute; inset:0; border:2px dashed var(--accentc); border-radius:8px; pointer-events:none; z-index:100; }
@@ -526,10 +489,17 @@ const POST_CREATE_STYLES = `
 @media(max-width:700px){.pc-panes{grid-template-columns:1fr;}}
 .pc-textarea { min-height:260px; resize:vertical; padding:10px; font-family:monospace; font-size:0.95rem; border:1px solid var(--border); border-radius:4px; background:var(--bgc); color:var(--textc); }
 .pc-preview { min-height:260px; padding:10px; border:1px solid var(--border); border-radius:4px; overflow-y:auto; background:var(--alt-bg); line-height:1.6; }
+.pc-markdown-body { display:contents; }
+.pc-preview h1 { margin:14px 0 8px; font-size:1.4em; }
 .pc-preview h2 { margin:12px 0 6px; }
+.pc-preview h3 { margin:10px 0 6px; font-size:1.05em; }
+.pc-preview h4 { margin:8px 0 4px; font-size:0.95em; }
 .pc-preview ul.pc-list { padding-left:20px; }
 .pc-preview ul.pc-checklist { list-style:none; padding-left:4px; }
 .pc-preview a { color:var(--accentc); }
+.pc-preview table.pc-table { width:100%; border-collapse:collapse; margin:8px 0; }
+.pc-preview table.pc-table th, .pc-preview table.pc-table td { border:1px solid var(--border); padding:6px 10px; text-align:left; }
+.pc-preview table.pc-table th { background:var(--bgc); }
 .pc-inline-img { max-width:100%; border-radius:4px; }
 .pc-thumbs { display:flex; flex-wrap:wrap; gap:10px; }
 .pc-thumb-wrap { display:flex; flex-direction:column; align-items:center; gap:4px; background:var(--alt-bg); border:1px solid var(--border); border-radius:6px; padding:6px; position:relative; width:120px; }

@@ -76,9 +76,10 @@ impl Database {
         pass:        Option<&str>,
         avatar:      Option<&str>,
         tags:        Option<&str>,
+        soft_ref:    Option<&str>,
     ) -> Result<Option<User>, sqlx::Error> {
         sqlx::query_as::<_, User>(
-            "SELECT * FROM db_update_user($1, $2, $3, $4, $5, $6)"
+            "SELECT * FROM db_update_user($1, $2, $3, $4, $5, $6, $7)"
         )
         .bind(target_id)
         .bind(modifier_id)
@@ -86,6 +87,7 @@ impl Database {
         .bind(pass)
         .bind(avatar)
         .bind(tags)
+        .bind(soft_ref)
         .fetch_optional(&self.pool)
         .await
     }

@@ -153,6 +153,7 @@ pub async fn profile_get(session: Arc<Mutex<Session>>, data: Value) {
         "name":        user.name,
         "avatar":      user.avatar,
         "tags":        user.tags,
+        "soft_ref":    user.soft_ref,
         "roles":       role_names(&roles),
         "permissions": permissions,
         "score":       user.score,
@@ -177,11 +178,12 @@ pub async fn profile_update(session: Arc<Mutex<Session>>, data: Value) {
     };
 
     let target_id = data["user_id"].as_i64().map(|id| id as i32).unwrap_or(modifier_id);
-    let name   = data["name"].as_str();
-    let avatar = data["avatar"].as_str();
-    let tags   = data["tags"].as_str();
+    let name     = data["name"].as_str();
+    let avatar   = data["avatar"].as_str();
+    let tags     = data["tags"].as_str();
+    let soft_ref = data["soft_ref"].as_str();
 
-    let user = match store.update_user(target_id, modifier_id, name, None, avatar, tags).await {
+    let user = match store.update_user(target_id, modifier_id, name, None, avatar, tags, soft_ref).await {
         Ok(Some(u)) => u,
         Ok(None) => {
             let s = session.lock().await;
@@ -214,6 +216,7 @@ pub async fn profile_update(session: Arc<Mutex<Session>>, data: Value) {
         "name":        user.name,
         "avatar":      user.avatar,
         "tags":        user.tags,
+        "soft_ref":    user.soft_ref,
         "roles":       role_names(&roles),
         "permissions": permissions,
         "score":       user.score,

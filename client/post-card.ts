@@ -75,7 +75,7 @@ export function renderPostCard(post: PostCardData, mode: PostCardMode): string {
 
     return `
     <div class="post-card c-foreign c-foreign-act c-foreign-hov"
-    data-post-id=${post.id}/>
+    data-post-id="${post.id ?? ''}">
     ${imageHtml}
     <div class="pc-card-body">
     <div class="pc-card-header">
@@ -93,12 +93,12 @@ export function renderPostCard(post: PostCardData, mode: PostCardMode): string {
 
 export function bindPostCardClicks(container: HTMLElement): void {
     container.addEventListener('click', e => {
-        const card = (e.target as HTMLElement).closest<HTMLElement>('.pc-card-clickable');
+        const card = (e.target as HTMLElement).closest<HTMLElement>('.post-card[data-post-id]');
         if (!card) return;
-        const id = card.dataset.postId;
-        if (id) {
-            window.dispatchEvent(new CustomEvent('app-navigate', {
-                detail: { page: 'post-page', postId: Number(id) }
+        const num = parseInt(card.dataset.postId ?? '', 10);
+        if (!isNaN(num)) {
+            window.dispatchEvent(new CustomEvent('open-viewer', {
+                detail: { postId: num }
             }));
         }
     });

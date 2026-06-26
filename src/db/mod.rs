@@ -30,6 +30,8 @@ pub struct User {
     pub tags:       Option<String>,
     pub settings:   Option<String>,
     pub score:      i64,
+    pub score_state: Option<String>,
+    pub soft_ref:   Option<String>,
 }
 
 #[derive(Debug, FromRow, Serialize, Deserialize)]
@@ -194,8 +196,9 @@ impl Store {
         pass:        Option<&str>,
         avatar:      Option<&str>,
         tags:        Option<&str>,
+        soft_ref:    Option<&str>,
     ) -> Result<Option<User>, StoreError> {
-        let user = self.db.update_user(target_id, modifier_id, name, pass, avatar, tags).await?;
+        let user = self.db.update_user(target_id, modifier_id, name, pass, avatar, tags, soft_ref).await?;
         if user.is_some() {
             self.cache.del(&format!("user:{target_id}")).await;
         }

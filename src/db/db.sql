@@ -6,19 +6,19 @@ CREATE OR REPLACE FUNCTION init_user_table()
 RETURNS void AS $$
 BEGIN
     CREATE TABLE IF NOT EXISTS users (
-        id              SERIAL PRIMARY KEY,    -- ид
-        name            TEXT NOT NULL,         -- имя
-        pass            VARCHAR(255) NOT NULL, -- хеш пароля
-        last_visit      TIMESTAMP NOT NULL, -- время последнего посешения
-        avatar          TEXT, -- имя файла аватарки на сервере
-        tags            TEXT, -- теги интересов записанные просто через ,
-        settings        TEXT, -- настройки клиента тупо json инлайн
-        score           BIGINT DEFAULT 0, -- очки кармы
-        score_state     TEXT, -- это стайт машины которые будут просто инлайн json
-        soft_ref        TEXT  -- поле для установления связи сушности user с чем угодно, проверки и каскадное
-                              -- удаление делегировано бекендуб зато можно не мигрируя таблицу префирица на новые сущности
-                              -- в неограниченном количестве
+        id              SERIAL PRIMARY KEY,
+        name            TEXT NOT NULL,
+        pass            VARCHAR(255) NOT NULL,
+        last_visit      TIMESTAMP NOT NULL,
+        avatar          TEXT,
+        tags            TEXT,
+        settings        TEXT,
+        score           BIGINT DEFAULT 0,
+        score_state     TEXT,
+        soft_ref        TEXT
     );
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS score_state TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS soft_ref     TEXT;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -214,13 +214,17 @@ $$;
 
 -- ----- profile -----
 
+DROP FUNCTION IF EXISTS db_update_user(INT, INT, TEXT, TEXT, TEXT, TEXT);
+DROP FUNCTION IF EXISTS db_update_user(INT, INT, TEXT, TEXT, TEXT, TEXT, TEXT);
+
 CREATE OR REPLACE FUNCTION db_update_user(
     p_target_id   INT,
     p_modifier_id INT,
     p_name        TEXT,
     p_pass        TEXT,
     p_avatar      TEXT,
-    p_tags        TEXT
+    p_tags        TEXT,
+    p_soft_ref    TEXT
 ) RETURNS SETOF users LANGUAGE plpgsql AS $$
 BEGIN
     -- ----- create new user -----
@@ -236,10 +240,11 @@ BEGIN
     IF p_target_id = p_modifier_id THEN
         RETURN QUERY
             UPDATE users SET
-                name   = COALESCE(p_name,   name),
-                pass   = COALESCE(p_pass,   pass),
-                avatar = COALESCE(p_avatar, avatar),
-                tags   = COALESCE(p_tags,   tags)
+                name     = COALESCE(p_name,     name),
+                pass     = COALESCE(p_pass,     pass),
+                avatar   = COALESCE(p_avatar,   avatar),
+                tags     = COALESCE(p_tags,     tags),
+                soft_ref = COALESCE(p_soft_ref, soft_ref)
             WHERE id = p_target_id
             RETURNING *;
         RETURN;
@@ -253,10 +258,11 @@ BEGIN
     ) THEN
         RETURN QUERY
             UPDATE users SET
-                name   = COALESCE(p_name,   name),
-                pass   = COALESCE(p_pass,   pass),
-                avatar = COALESCE(p_avatar, avatar),
-                tags   = COALESCE(p_tags,   tags)
+                name     = COALESCE(p_name,     name),
+                pass     = COALESCE(p_pass,     pass),
+                avatar   = COALESCE(p_avatar,   avatar),
+                tags     = COALESCE(p_tags,     tags),
+                soft_ref = COALESCE(p_soft_ref, soft_ref)
             WHERE id = p_target_id
             RETURNING *;
     END IF;

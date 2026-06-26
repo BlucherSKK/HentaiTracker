@@ -12,6 +12,8 @@ import { PostCreatePage } from "./post-create";
 import { SidebarNews } from './sidebar-news';
 import { SettingsPage, applySettings } from './settings';
 import { PostPage } from "./post-page";
+import { PostViewer } from "./viewer";
+import { ViewerTab } from "./nav";
 import { UserChip } from "./user-chip";
 import { setProfileCache } from "./store";
 
@@ -33,17 +35,19 @@ export interface User {
     settings: string | null;
 }
 
-type PageType = 'feeds' | 'projects' | 'settings' | 'login' | 'dm' | 'chats' | 'profile' | 'terminal' | 'post-create' | 'post-page';
+type PageType = 'feeds' | 'projects' | 'settings' | 'login' | 'dm' | 'chats' | 'profile' | 'terminal' | 'post-create' | 'post-page' | 'viewer';
 
 interface AppState {
-    page:     PageType;
-    lastpage: PageType;
-    user?:    User;
-    items:    string[];
-    init:     boolean;
-    db:       HntDataBase;
-    ws?:      HntWsConnection;
-    postId?:  number;
+    page:          PageType;
+    lastpage:      PageType;
+    user?:         User;
+    items:         string[];
+    init:          boolean;
+    db:            HntDataBase;
+    ws?:           HntWsConnection;
+    postId?:       number;
+    viewerTabs:    ViewerTab[];
+    activeViewerId: number | null;
 }
 
 // ----- custom elements -----
@@ -59,7 +63,8 @@ customElements.define('app-post-create',  PostCreatePage);
 customElements.define('app-sidebar', SidebarNews);
 customElements.define('app-settings',     SettingsPage);
 customElements.define('app-post-page', PostPage);
-customElements.define('user-chip', UserChip);
+customElements.define('app-viewer',    PostViewer);
+customElements.define('user-chip',     UserChip);
 // ----- App -----
 
 function inwindow(src: string): string {
@@ -68,11 +73,13 @@ function inwindow(src: string): string {
 
 const App = {
     state: {
-        page:     'login',
-        lastpage: 'login',
-        items:    [],
-        init:     false,
-        db:       init_test_db(),
+        page:           'login',
+        lastpage:       'login',
+        items:          [],
+        init:           false,
+        db:             init_test_db(),
+        viewerTabs:     [],
+        activeViewerId: null,
     } as AppState,
 
     init(): void {
@@ -219,8 +226,10 @@ const App = {
         });
 
         hero.querySelectorAll<AppNav>('app-nav').forEach(nav => {
-            nav.setAttribute('data-link',       this.state.page);
-            nav.setAttribute('data-user-roles', this.state.user?.roles || '');
+            nav.setAttribute('data-link',         this.state.page);
+            nav.setAttribute('data-user-roles',   this.state.user?.roles || '');
+            nav.setAttribute('data-viewer-tabs',  JSON.stringify(this.state.viewerTabs));
+            nav.setAttribute('data-viewer-active', String(this.state.activeViewerId ?? ''));
         });
 
         // ----- передача зависимостей -----
@@ -256,12 +265,16 @@ const App = {
             const el = hero.querySelector('app-post-page') as PostPage;
             if (el) el.postId = this.state.postId ?? null;
         }
+        if (this.state.page === 'viewer') {
+            const el = hero.querySelector('app-viewer') as PostViewer;
+            if (el) el.postId = this.state.activeViewerId;
+        }
     },
 
     // ----- page slots -----
 
     ensurePages(hero: HTMLElement): void {
-        const pages: PageType[] = ['feeds', 'dm', 'chats', 'login', 'profile', 'terminal', 'post-create', 'settings', 'post-page'];
+        const pages: PageType[] = ['feeds', 'dm', 'chats', 'login', 'profile', 'terminal', 'post-create', 'settings', 'post-page', 'viewer'];
         for (const page of pages) {
             if (hero.querySelector(`[data-page="${page}"]`)) continue;
 
@@ -300,11 +313,17 @@ const App = {
             case 'dm':          return wrap(this.state.user ? '' : get_nonlogin_dm_noty());
             case 'chats':       return wrap(`<app-chats></app-chats>`);
             case 'login':       return `<div class="tab"><div class="tab-in"><app-auth></app-auth></div></div>`;
-            case 'profile':     return wrap(`<app-profile></app-profile>`);
+            case 'profile':     return wrap(`
+                <div class="feed-layout">
+                    <div class="spacer"></div>
+                    <app-profile></app-profile>
+                    <div class="spacer"></div>
+                </div>`);
             case 'terminal':    return wrap(`<app-terminal></app-terminal>`);
             case 'post-create': return wrap(`<app-post-create></app-post-create>`);
             case 'settings':    return wrap(`<app-settings></app-settings>`);
             case 'post-page':   return wrap(`<app-post-page></app-post-page>`);
+            case 'viewer':      return wrap(`<app-viewer></app-viewer>`);
             default:            return nav;
         }
     },
@@ -312,8 +331,36 @@ const App = {
     // ----- navigation -----
 
     initNavigation(): void {
+        window.addEventListener('open-viewer', (e: Event) => {
+            const { postId } = (e as CustomEvent<{ postId: number }>).detail;
+            const existing = this.state.viewerTabs.find(t => t.id === postId);
+            if (!existing) this.state.viewerTabs.push({ id: postId, title: 'Загрузка…' });
+            this.state.activeViewerId = postId;
+            this.state.lastpage = this.state.page;
+            this.state.page = 'viewer';
+            this.render();
+        });
+
+        window.addEventListener('close-viewer', (e: Event) => {
+            const { id } = (e as CustomEvent<{ id: number }>).detail;
+            this.state.viewerTabs = this.state.viewerTabs.filter(t => t.id !== id);
+            if (this.state.activeViewerId === id) {
+                const tabs = this.state.viewerTabs;
+                this.state.activeViewerId = tabs.length > 0 ? tabs[tabs.length - 1].id : null;
+                if (this.state.activeViewerId === null)
+                    this.state.page = this.state.lastpage === 'viewer' ? 'feeds' : this.state.lastpage;
+            }
+            this.render();
+        });
+
+        window.addEventListener('viewer-loaded', (e: Event) => {
+            const { id, title } = (e as CustomEvent<{ id: number; title: string }>).detail;
+            const tab = this.state.viewerTabs.find(t => t.id === id);
+            if (tab && tab.title !== title) { tab.title = title; this.render(); }
+        });
+
         window.addEventListener('app-navigate', (e: Event) => {
-            const detail    = (e as CustomEvent).detail as { page: string; postId?: number };
+            const detail    = (e as CustomEvent).detail as { page: string; postId?: number; viewerId?: number };
             const targetPage = detail.page as PageType;
             if (!this.state.user && targetPage !== 'login') return;
             if (targetPage === 'settings' && !this.state.user) return;
@@ -321,6 +368,7 @@ const App = {
                 this.state.lastpage = this.state.page;
                 this.state.page     = targetPage;
                 if (detail.postId != null) this.state.postId = detail.postId;
+                if (detail.viewerId != null) this.state.activeViewerId = detail.viewerId;
                 history.pushState({ page: targetPage, postId: detail.postId }, '', `/#${targetPage}`);
                 this.render();
             }
